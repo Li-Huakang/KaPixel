@@ -2,12 +2,53 @@
 #include "main.h"
 #include "aic3101.h"
 #include "ws2812b.h"
+#include "sntp.h"
 #include "wifi.h"
 #include "driver/i2c_master.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_err.h"
+#include "esp_sntp.h"
+#include "esp_timer.h"
+#include "time.h"
 
+static const char *TAG = "KaPixel";
+
+
+// 时间刷新的任务
+void time_display_task(void* pvParameters) {
+    time_t now;
+    struct tm timeinfo;
+    time(&now);
+    setenv("TZ", "CST-8", 1);
+    tzset();
+    localtime_r(&now, &timeinfo);
+    
+    time_t last_time = now;  // 使用当前时间初始化last_time
+
+    while (1) {
+        time(&now);
+        localtime_r(&now, &timeinfo);
+
+        if (now != last_time) {
+            // 如果秒数变化了，更新LED显示
+            // ESP_LOGI(TAG, "Update Time Display");
+            led_display_time(&timeinfo);
+            last_time = now;
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(100));//100ms
+    }
+}
+
+// 定期对时的任务
+void time_sync_task(void* pvParameters) {
+    while (1) {
+        ESP_LOGI(TAG, "Start Time Sync");
+        obtain_time();
+        vTaskDelay(pdMS_TO_TICKS(1000*3600*24)); // 24小时后再次同步时间
+    }
+}
 
 void app_main(void) {
     wifi_prov();
@@ -52,38 +93,27 @@ void app_main(void) {
     // 初始化 Codec
     ret = audio_codec_init(&codec_cfg);
     if (ret != ESP_OK) {
-        ESP_LOGE("main", "Failed to initialize audio codec: %s", esp_err_to_name(ret));
+        ESP_LOGE(TAG, "Failed to initialize audio codec: %s", esp_err_to_name(ret));
         return;
     }
 
-    ESP_LOGI("main", "Audio codec initialized successfully!");
+    ESP_LOGI(TAG, "Audio codec initialized successfully!");
 
     //Set CODEC to passthrough mode
     set_line_to_pa_mode(&codec_cfg);
-    // enable_pa(&codec_cfg);
+    enable_pa(&codec_cfg);
 
     if (led_init() != ESP_OK) {
-        ESP_LOGE("MAIN", "Failed to initialize LED strip");
+        ESP_LOGE(TAG, "Failed to initialize LED strip");
         return;
     }
 
-    // while (true) {
-    //     int a = 0;
-    //     int *index = &a;
-    //     for (int i=0; i<10; i++) {
-    //         ESP_LOGI("main", "index: %d", *index);
-    //         ESP_LOGI("main", "Display: %d", i);
-    //         led_set_num_pixel(i, index, 200, 220, 230, 1, led_is_reverse(*index));
-    //         led_set_space(index);
-    //         led_set_colon(index, 200, 220, 230, 1, led_is_reverse(*index));
-    //         led_set_space(index);
-    //         vTaskDelay(pdMS_TO_TICKS(1000));
-    //         if ((*index+8*3) >= LED_STRIP_LED_NUMBERS){
-    //             led_clear_all();
-    //             *index = 0;
-    //         }
-    //     }
-    // }
-
-    led_display_time("123456");
+    // 创建每秒轮询时间变化的任务
+    xTaskCreate(time_display_task, "time_display_task", 2048, NULL, 5, NULL);
+    // 创建定期更新时间的任务
+    xTaskCreate(time_sync_task, "time_sync_task", 4096, NULL, 5, NULL);
+    
 }
+
+
+

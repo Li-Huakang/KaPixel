@@ -111,15 +111,16 @@ void led_set_space(int *start_index) {
     *start_index += 8;
 }
 
-void led_display_time(const char *time) {
-    ESP_ERROR_CHECK(led_clear_all());
-    int hour1, hour2, minute1, minute2, second1, second2;
-    hour1 = time[0] - '0';
-    hour2 = time[1] - '0';
-    minute1 = time[2] - '0';
-    minute2 = time[3] - '0';
-    second1 = time[4] - '0';
-    second2 = time[5] - '0';
+void led_display_time(const struct tm *timeinfo) {
+    // ESP_ERROR_CHECK(led_clear_all());
+
+    int hour1 = timeinfo->tm_hour / 10;  // 小时的十位
+    int hour2 = timeinfo->tm_hour % 10;  // 小时的个位
+    int minute1 = timeinfo->tm_min / 10;  // 分钟的十位
+    int minute2 = timeinfo->tm_min % 10;  // 分钟的个位
+    int second1 = timeinfo->tm_sec / 10;  // 秒的十位
+    int second2 = timeinfo->tm_sec % 10;  // 秒的个位
+
     int index = 0;
     led_set_space(&index);
     led_set_space(&index);

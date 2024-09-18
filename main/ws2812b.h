@@ -3,6 +3,8 @@
 
 #include "driver/gpio.h"
 #include "led_strip.h"
+#include "time.h"
+
 
 // GPIO assignment
 #define LED_STRIP_BLINK_GPIO  6
@@ -30,7 +32,7 @@ void led_set_colon(int *start_index, uint32_t red, uint32_t green, uint32_t blue
 
 void led_set_space(int *start_index);
 
-void led_display_time(const char *time);
+void led_display_time(const struct tm *timeinfo);
 
 
 #endif // WS2812B_H

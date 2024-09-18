@@ -26,6 +26,25 @@
         "wifi_config.h": "c",
         "esp_wifi_types.h": "c",
         "esp_wifi.h": "c",
-        "scheme_ble.h": "c"
+        "scheme_ble.h": "c",
+        "esp_sntp.h": "c",
+        "charconv": "c",
+        "chrono": "c",
+        "future": "c",
+        "limits": "c",
+        "streambuf": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "ctime": "c",
+        "iomanip": "c",
+        "numeric": "c",
+        "ratio": "c",
+        "*.inc": "c",
+        "esp_netif_sntp.h": "c",
+        "_locale.h": "c",
+        "condition_variable": "c",
+        "mutex": "c",
+        "esp_timer.h": "c",
+        "wifi.h": "c"
     }
 }
